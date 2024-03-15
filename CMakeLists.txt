@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.27)
+
+project(
+	local_rcc
+	VERSION 0.0.0
+	LANGUAGES CXX
+)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+file(
+	GLOB_RECURSE
+	SOURCES
+	CONFIGURE_DEPENDS
+	"${PROJECT_SOURCE_DIR}/src/*.cpp"
+	"${PROJECT_SOURCE_DIR}/src/*.hpp"
+)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
