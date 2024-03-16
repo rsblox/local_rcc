@@ -1,0 +1,12 @@
+[submodule "lib/luau"]
+	path = lib/luau
+	url = https://github.com/luau-lang/luau.git
+[submodule "lib/safetyhook"]
+	path = lib/safetyhook
+	url = https://github.com/cursey/safetyhook.git
+[submodule "lib/xxHash"]
+	path = lib/xxHash
+	url = https://github.com/Cyan4973/xxHash.git
+[submodule "lib/zstd"]
+	path = lib/zstd
+	url = https://github.com/facebook/zstd.git

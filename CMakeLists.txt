@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.27)
 
+set(SAFETYHOOK_FETCH_ZYDIS ON)
+
+add_subdirectory(lib/luau)
+add_subdirectory(lib/safetyhook)
+add_subdirectory(lib/xxHash/cmake_unofficial)
+add_subdirectory(lib/zstd/build/cmake)
+
 project(
 	local_rcc
 	VERSION 0.0.0
@@ -18,3 +25,10 @@ file(
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC Luau.Compiler)
+target_link_libraries(${PROJECT_NAME} PUBLIC safetyhook)
+target_link_libraries(${PROJECT_NAME} PUBLIC xxHash::xxhash)
+target_link_libraries(${PROJECT_NAME} PUBLIC libzstd_static)
+
+target_include_directories(${PROJECT_NAME} PUBLIC lib/zstd/lib)
