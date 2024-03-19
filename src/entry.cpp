@@ -36,7 +36,7 @@ namespace types {
 	typedef std::string (*compile)(const std::string& source, int target, int options);
 	typedef void* (*deserialize_item)(void* self, void* result, void* in_bitstream, int item_type);
 	enum item_type { client_qos = 0x1f };
-	enum network_value_format { proteted_string_bytecode = 0x2f };
+	enum network_value_format { protected_string_bytecode = 0x2f };
 }
 
 namespace hooks {
@@ -129,7 +129,7 @@ void* deserialize_item_hook(void* self, void* deserialized_item, void* in_bitstr
 
 void patch_generate_schema_definition_packet() {
 	uintptr_t addr = reinterpret_cast<uintptr_t>(module) + addrs::generate_schema_definition_packet;
-	std::byte byte = std::byte(types::network_value_format::proteted_string_bytecode);
+	std::byte byte = std::byte(types::network_value_format::protected_string_bytecode);
 
 	DWORD old_protect;
 	VirtualProtect(reinterpret_cast<void*>(addr), 16, PAGE_EXECUTE_READWRITE, &old_protect);
