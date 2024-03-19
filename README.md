@@ -31,9 +31,9 @@ item type of `ClientQoS` is passed.
 ### BytecodeEncoderClient
 
 Opening the developer console in Player after connecting to the team test
-server shows some strange errors with the path of `LocalScript` instances.
-that are replicated to Player and none of them are executed. This is partly due
-to how Studio populates the contents of the server's `legalScripts` vector. A
+server shows some strange errors with the path of `LocalScript` instances that
+are replicated to Player and none of them are executed. This is partly due to
+how Studio populates the contents of the server's `legalScripts` vector. A
 `LegalScript` is a 'whitelisted' script for replication, containing source and
 bytecode. The function `RBX::Network::Server::registerLegalSharedScript` is
 used to register _and compile_ these scripts.
