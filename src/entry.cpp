@@ -27,9 +27,9 @@ void operator delete(void* ptr) noexcept {
 }
 
 namespace addrs {
-	const uintptr_t compile = 0x1a8e660;
-	const uintptr_t deserialize_item = 0x16684c0;
-	const uintptr_t generate_schema_definition_packet = 0x16fc80a;
+	const uintptr_t compile = 0xdeadbeef;
+	const uintptr_t deserialize_item = 0xdeadbeef;
+	const uintptr_t generate_schema_definition_packet = 0xdeadbeef;
 }
 
 namespace types {
