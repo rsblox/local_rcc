@@ -4,7 +4,7 @@
 
 ## 📖 Explanation
 
-There are four steps to make a team test compatible with Player:
+There are four steps to make a local server compatible with Player:
 [setting a fast flag](#debuglocalrccserverconnection),
 [blocking an unhandled item](#clientqos),
 [compiling compatible bytecode](#bytecodeencoderclient),
@@ -16,21 +16,21 @@ Overriding the fast flag, `DebugLocalRccServerConnection`, on both Player and
 Studio will disable almost all the network security required for joining games
 on the server and client. It also will force Player to connect to `localhost`.
 
-With this alone, you can already join a Studio team test from Player - however,
+With this alone, you can already join a Studio local server from Player - however,
 it is not _playable_ yet.
 
 ### ClientQoS
 
 <!-- 👀 -->
 
-Shortly after Player joins the team test server, it will be kicked after
+Shortly after Player joins the local server, it will be kicked after
 sending a `ClientQoS` item - which is unhandled by Studio. This can be resolved
 by discarding the result of `RBX::Network::Replicator::deserializeItem` if an
 item type of `ClientQoS` is passed.
 
 ### BytecodeEncoderClient
 
-Opening the developer console in Player after connecting to the team test
+Opening the developer console in Player after connecting to the local server
 server shows some strange errors with the path of `LocalScript` instances that
 are replicated to Player and none of them are executed. This is partly due to
 how Studio populates the contents of the server's `legalScripts` vector. A
