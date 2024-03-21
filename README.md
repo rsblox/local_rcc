@@ -2,6 +2,9 @@
 
 *Selfhosted game servers for the latest versions of Roblox.*
 
+
+Current targeted Roblox Studio deployment: `version-1c901af996da417b` (LIVE, v617) - [Download with RDD](https://rdd.latte.to/?channel=LIVE&binaryType=WindowsStudio64&version=version-1c901af996da417b)
+
 ## 📖 Explanation
 
 There are four steps to make a team test compatible with Player:
