@@ -2,31 +2,66 @@
 
 *Selfhosted game servers for the latest versions of Roblox.*
 
+**local_rcc** is a library that works with Roblox Studio (currently Windows only)
+and allows the Roblox Player to connect to a Roblox Studio hosted server.
+
+## 🛠️ Building
+
+This guide is for building on Microsoft Windows.
+
+Make sure you have [Microsoft Visual 2022 with the base C++ development pack](https://visualstudio.microsoft.com/vs/features/cplusplus/)
+installed.
+
+Clone and `cd` into the repository:
+```powershell
+git clone https://github.com/rsblox/local_rcc.git
+cd local_rcc
+```
+
+### With Visual Studio Code & CMake Tools extension
+
+Make sure you have [Visual Studio Code](https://code.visualstudio.com/)
+installed with the [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+extention installed.
+
+Open the cloned repository:
+```powershell
+code .
+```
+
+If prompted to select a build kit, select the `amd64` one.
+
+Navigate to the CMake tab and set the build type to `RelWithDebInfo`.
+
+In the project outline in the same CMake tab, build the local_rcc
+[local_rcc.dll] target. Once completed, the library should be located at
+`bin/local_rcc.dll`.
+
 ## 📖 Explanation
 
 There are four steps to make a team test compatible with Player:
 [setting a fast flag](#debuglocalrccserverconnection),
-[blocking an unhandled item](#clientqos),
+[blocking an unhandled item](#clientqositem),
 [compiling compatible bytecode](#bytecodeencoderclient),
 and [replicating the bytecode](#networkschema).
 
 ### DebugLocalRccServerConnection
 
 Overriding the fast flag, `DebugLocalRccServerConnection`, on both Player and
-Studio will disable almost all the network security required for joining games
-on the server and client. It also will force Player to connect to `localhost`.
+Studio will allow a connection to be made between the client and the server.
+It also will force the client to connect to `localhost|53640`.
 
 With this alone, you can already join a Studio team test from Player - however,
 it is not _playable_ yet.
 
-### ClientQoS
+### ClientQoSItem
 
 <!-- 👀 -->
 
 Shortly after Player joins the team test server, it will be kicked after
-sending a `ClientQoS` item - which is unhandled by Studio. This can be resolved
-by discarding the result of `RBX::Network::Replicator::deserializeItem` if an
-item type of `ClientQoS` is passed.
+sending a `ClientQoSItem` - which is unhandled by Studio. This can be resolved
+by refusing to deserialize the item if a `ClientQoSItem` is passed to
+`RBX::Network::Replicator::deserializeItem`.
 
 ### BytecodeEncoderClient
 
