@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <Psapi.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -12,6 +13,7 @@
 #include <Luau/BytecodeBuilder.h>
 #include <Luau/BytecodeUtils.h>
 #include <Luau/Compiler.h>
+#include <Pattern16.h>
 #include <safetyhook.hpp>
 #include <xxhash.h>
 #include <zstd.h>
@@ -26,12 +28,6 @@ void operator delete(void* ptr) noexcept {
 	reinterpret_cast<void (*)(void* ptr)>(GetProcAddress(module, "rbxDeallocate"))(ptr);
 }
 
-namespace addrs {
-	const uintptr_t compile = 0x1ad79f0;
-	const uintptr_t deserialize_item = 0x16acba0;
-	const uintptr_t generate_schema_definition_packet = 0x1741c2a;
-}
-
 namespace types {
 	typedef std::string (*compile)(const std::string& source, int target, int options);
 	typedef void* (*deserialize_item)(void* self, void* result, void* in_bitstream, int item_type);
@@ -44,7 +40,7 @@ namespace hooks {
 	SafetyHookInline deserialize_item {};
 }
 
-types::compile compile = reinterpret_cast<types::compile>(reinterpret_cast<uintptr_t>(module) + addrs::compile);
+types::compile compile;
 
 std::string compile_hook(const std::string& source, int target, int options) {
 	std::println(
@@ -111,7 +107,7 @@ std::string compile_hook(const std::string& source, int target, int options) {
 	return std::string(reinterpret_cast<char*>(encoded_bytecode.data()), encoded_bytecode_size);
 }
 
-types::deserialize_item deserialize_item = reinterpret_cast<types::deserialize_item>(reinterpret_cast<uintptr_t>(module) + addrs::deserialize_item);
+types::deserialize_item deserialize_item;
 
 void* deserialize_item_hook(void* self, void* deserialized_item, void* in_bitstream, int item_type) {
 	std::println(
@@ -127,8 +123,10 @@ void* deserialize_item_hook(void* self, void* deserialized_item, void* in_bitstr
 	return hooks::deserialize_item.call<void*>(self, deserialized_item, in_bitstream, item_type);
 }
 
+uintptr_t generate_schema_definition_packet;
+
 void patch_generate_schema_definition_packet() {
-	uintptr_t addr = reinterpret_cast<uintptr_t>(module) + addrs::generate_schema_definition_packet;
+	uintptr_t addr = generate_schema_definition_packet;
 	std::byte byte = std::byte(types::network_value_format::protected_string_bytecode);
 
 	DWORD old_protect;
@@ -143,8 +141,41 @@ void attach_console() {
 	SetConsoleTitle(std::format("rsblox/local_rcc @ {}", __TIMESTAMP__).c_str());
 }
 
+void pattern_scan() {
+	MODULEINFO info; GetModuleInformation(GetCurrentProcess(), module, &info, sizeof(info));
+	void* start = reinterpret_cast<void*>(module); size_t size = info.SizeOfImage;
+
+	compile = reinterpret_cast<types::compile>(Pattern16::scan(
+		start, size, "33 C0 48 C7 41 18 0F 00 00 00 48 89 01 48 89 41 10 88 01 48 8B C1"
+	));
+
+	std::println(
+		"Found compile @ {:p}",
+		reinterpret_cast<void*>(compile)
+	);
+
+	deserialize_item = reinterpret_cast<types::deserialize_item>(Pattern16::scan(
+		start, size, "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 54 24 ?? 55 57 41 56 48 8B EC 48 83 EC 40 49 8B F8"
+	));
+
+	std::println(
+		"Found deserialize_item @ {:p}",
+		reinterpret_cast<void*>(deserialize_item)
+	);
+
+	generate_schema_definition_packet = reinterpret_cast<uintptr_t>(Pattern16::scan(
+		start, size, "C6 44 24 ?? 06 EB ?? 48 3B 15"
+	));
+
+	std::println(
+		"Found generate_schema_definition_packet @ {:p}",
+		reinterpret_cast<void*>(generate_schema_definition_packet)
+	);
+}
+
 void thread() {
 	attach_console(); std::println("Hello, world!");
+	pattern_scan(); std::println("Scanning finished.");
 
 	hooks::compile = safetyhook::create_inline(compile, compile_hook);
 	std::println("Hooked LuaVM::compile.");

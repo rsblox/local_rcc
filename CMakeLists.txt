@@ -13,6 +13,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(luau)
 
 FetchContent_Declare(
+	Pattern16
+	GIT_REPOSITORY https://github.com/Dasaav-dsv/Pattern16.git
+	GIT_TAG 728eac543cee7e7bf6fda445d7db06e3dc8a61d0
+)
+
+FetchContent_MakeAvailable(Pattern16)
+
+FetchContent_Declare(
 	safetyhook
 	GIT_REPOSITORY https://github.com/cursey/safetyhook.git
 	GIT_TAG v0.4.1
@@ -63,4 +71,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE safetyhook)
 target_link_libraries(${PROJECT_NAME} PRIVATE xxHash::xxhash)
 target_link_libraries(${PROJECT_NAME} PRIVATE libzstd_static)
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${pattern16_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${zstd_SOURCE_DIR}/lib)
