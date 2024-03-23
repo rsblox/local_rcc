@@ -10,6 +10,7 @@ FetchContent_Declare(
 	GIT_TAG 0.617
 )
 
+message("Fetching luau...")
 FetchContent_MakeAvailable(luau)
 
 FetchContent_Declare(
@@ -18,6 +19,7 @@ FetchContent_Declare(
 	GIT_TAG 728eac543cee7e7bf6fda445d7db06e3dc8a61d0
 )
 
+message("Fetching Pattern16...")
 FetchContent_MakeAvailable(Pattern16)
 
 FetchContent_Declare(
@@ -26,6 +28,7 @@ FetchContent_Declare(
 	GIT_TAG v0.4.1
 )
 
+message("Fetching safetyhook...")
 FetchContent_MakeAvailable(safetyhook)
 
 FetchContent_Declare(
@@ -34,6 +37,7 @@ FetchContent_Declare(
 	GIT_TAG v0.8.2
 )
 
+message("Fetching xxHash...")
 FetchContent_MakeAvailable(xxHash)
 
 FetchContent_Declare(
@@ -42,6 +46,7 @@ FetchContent_Declare(
 	GIT_TAG v1.5.5
 )
 
+message("Fetching zstd...")
 FetchContent_MakeAvailable(zstd)
 
 project(

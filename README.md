@@ -9,14 +9,24 @@ and allows the Roblox Player to connect to a Roblox Studio hosted server.
 
 This guide is for building on Microsoft Windows.
 
-Make sure you have [Microsoft Visual 2022 with the base C++ development pack](https://visualstudio.microsoft.com/vs/features/cplusplus/)
-installed.
+Make sure you have the following prerequisites:
 
-Clone and `cd` into the repository:
-```powershell
-git clone https://github.com/rsblox/local_rcc.git
-cd local_rcc
+- [Microsoft Visual 2022 with the base C++ development pack](https://visualstudio.microsoft.com/vs/features/cplusplus/)
+    - Includes necessary compiler and linker, plus a build of CMake
+- [Ninja build system](https://ninja-build.org/)
+    - Easily install with `winget install Ninja-build.ninja`
+
+---
+
+Clone the repository:
 ```
+git clone https://github.com/rsblox/local_rcc.git
+```
+
+There are two methods for building:
+
+1. Visual Studio Code with the CMake Tools extension
+2. Visual Studio's built-in CMake features
 
 ### With Visual Studio Code & CMake Tools extension
 
@@ -25,17 +35,35 @@ installed with the [CMake Tools](https://marketplace.visualstudio.com/items?item
 extention installed.
 
 Open the cloned repository:
-```powershell
-code .
+```
+code local_rcc
 ```
 
 If prompted to select a build kit, select the `amd64` one.
+
+CMake Tools will automatically configure the project; be patient and wait in
+the output for configuration to complete; this includes the fetching of
+dependencies from the Internet.
 
 Navigate to the CMake tab and set the build type to `RelWithDebInfo`.
 
 In the project outline in the same CMake tab, build the local_rcc
 [local_rcc.dll] target. Once completed, the library should be located at
 `bin/local_rcc.dll`.
+
+### With Visual Studio
+
+Open Visual Studio 2022 and navigate to `File -> Open -> CMake...` and navigate
+to the `CMakeLists.txt` file in the repository cloned earlier. Open the Output
+and watch for fetching the dependencies and configuring to complete. This may
+take a bit.
+
+Make sure the configuration on the top is set to `x64-RelWithDebInfo`. In the
+Solution Explorer window, click the icon with the caption "Switch between
+solutions and available views". Click on the CMake Targets view. This list
+should be populated once CMake configuration is successful. Right click on the
+local_rcc target, and click "Build local_rcc". The resultant build should be
+located at `out/build/x64-RelWithDebInfo/local_rcc.dll`.
 
 ## 📖 Explanation
 
