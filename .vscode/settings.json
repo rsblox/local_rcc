@@ -1,8 +1,7 @@
 {
 	"files.exclude": {
-		".vscode": true,
 		".editorconfig": true,
 	},
 
-	"cmake.buildDirectory": "${workspaceFolder}/bin",
+	"cmake.buildDirectory": "${workspaceFolder}/bin"
 }

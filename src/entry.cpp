@@ -123,59 +123,81 @@ void* deserialize_item_hook(void* self, void* deserialized_item, void* in_bitstr
 	return hooks::deserialize_item.call<void*>(self, deserialized_item, in_bitstream, item_type);
 }
 
-uintptr_t generate_schema_definition_packet;
+uintptr_t type_for_property_mov_imm_address;
 
-void patch_generate_schema_definition_packet() {
-	uintptr_t addr = generate_schema_definition_packet;
+void patch_type_for_property() {
 	std::byte byte = std::byte(types::network_value_format::protected_string_bytecode);
 
 	DWORD old_protect;
-	VirtualProtect(reinterpret_cast<void*>(addr), 16, PAGE_EXECUTE_READWRITE, &old_protect);
-	*reinterpret_cast<std::byte*>(addr + 4) = byte;
-	VirtualProtect(reinterpret_cast<void*>(addr), 16, old_protect, &old_protect);
+	VirtualProtect(reinterpret_cast<void*>(type_for_property_mov_imm_address), 16, PAGE_EXECUTE_READWRITE, &old_protect);
+	*reinterpret_cast<std::byte*>(type_for_property_mov_imm_address) = byte;
+	VirtualProtect(reinterpret_cast<void*>(type_for_property_mov_imm_address), 16, old_protect, &old_protect);
 }
 
 void attach_console() {
+	#if defined(_WIN64)
 	AllocConsole();
 	static FILE* file; freopen_s(&file, "CONOUT$", "w", stdout);
-	SetConsoleTitle(std::format("rsblox/local_rcc @ {}", __TIMESTAMP__).c_str());
+	SetConsoleTitleA(std::format("rsblox/local_rcc @ {}", __TIMESTAMP__).c_str());
+	#endif
 }
 
-void pattern_scan() {
-	MODULEINFO info; GetModuleInformation(GetCurrentProcess(), module, &info, sizeof(info));
-	void* start = reinterpret_cast<void*>(module); size_t size = info.SizeOfImage;
+void* pattern_scan(const std::string& signature) {
+    MODULEINFO moduleInfo;
+    GetModuleInformation(GetCurrentProcess(), module, &moduleInfo, sizeof(moduleInfo));
 
-	compile = reinterpret_cast<types::compile>(Pattern16::scan(
-		start, size, "33 C0 48 C7 41 18 0F 00 00 00 48 89 01 48 89 41 10 88 01 48 8B C1"
-	));
+    return Pattern16::scan(reinterpret_cast<void*>(module), moduleInfo.SizeOfImage, signature);
+}
 
-	std::println(
-		"Found compile @ {:p}",
-		reinterpret_cast<void*>(compile)
-	);
+bool scan_for_addresses() {
+	#define SCAN_WITH_OFFSET(symbol, patternarg, offsetFromResult) {  		\
+        std::string pattern = (patternarg);                                 \
+        symbol = (decltype(symbol))pattern_scan(pattern);                   \
+        if (!symbol) return false;                                          \
+        symbol = (decltype(symbol))((uintptr_t)symbol + offsetFromResult);  \
+        std::println("Found " #symbol);                                     \
+    }
 
-	deserialize_item = reinterpret_cast<types::deserialize_item>(Pattern16::scan(
-		start, size, "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 54 24 ?? 55 57 41 56 48 8B EC 48 83 EC 40 49 8B F8"
-	));
+    #define SCAN(symbol, patternarg) SCAN_WITH_OFFSET(symbol, patternarg, 0)
 
-	std::println(
-		"Found deserialize_item @ {:p}",
-		reinterpret_cast<void*>(deserialize_item)
-	);
+	#if defined(_WIN64) && defined(_M_X64)
+	SCAN(compile, "33 C0 48 C7 41 18 0F 00 00 00 48 89 01 48 89 41 10 88 01 48 8B C1");
+	#elif defined(__APPLE__) && defined(__x86_64__)
+	SCAN(compile, "55 48 89 E5 53 50 48 89 FB 48 8D 35 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 89 D8 48 83 C4 08 5B 5D C3");
+	#elif defined(__APPLE__) && defined(__aarch64__)
+	#error TODO
+	#endif
+	
+	#if defined(_WIN64) && defined(_M_X64)
+	SCAN(deserialize_item, "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 54 24 ?? 55 57 41 56 48 8B EC 48 83 EC 40 49 8B F8");
+	#elif defined(__APPLE__) && defined(__x86_64__)
+	SCAN(deserialize_item, "55 48 89 E5 41 57 41 56 53 50 48 89 FB 48 C7 07 00 00 00 00 FF C9 83 F9 15");
+	#elif defined(__APPLE__) && defined(__aarch64__)
+	#error TODO
+	#endif
 
-	generate_schema_definition_packet = reinterpret_cast<uintptr_t>(Pattern16::scan(
-		start, size, "C6 44 24 ?? 06 EB ?? 48 3B 15"
-	));
+	#if defined(_WIN64) && defined(_M_X64)
+	SCAN_WITH_OFFSET(type_for_property_mov_imm_address, "C6 44 24 ?? 06 EB ?? 48 3B 15", 4);
+	#elif defined(__APPLE__) && defined(__x86_64__)
+	SCAN_WITH_OFFSET(type_for_property_mov_imm_address, "E8 ?? ?? ?? ?? 84 C0 B9 2F 00 00 00 B8 06 00 00 00 48 0F 45 C1", 13);
+	#elif defined(__APPLE__) && defined(__aarch64__)
+	#error TODO
+	#endif
 
-	std::println(
-		"Found generate_schema_definition_packet @ {:p}",
-		reinterpret_cast<void*>(generate_schema_definition_packet)
-	);
+	#undef SCAN_WITH_OFFSET
+	#undef SCAN
+
+	return true;
 }
 
 void thread() {
 	attach_console(); std::println("Hello, world!");
-	pattern_scan(); std::println("Scanning finished.");
+
+	if (!scan_for_addresses()) {
+		std::println(stderr, "[ERROR] Could not find all needed patterns. local_rcc must be updated.");
+		return;
+	}
+	std::println("Scanning finished.");
 
 	hooks::compile = safetyhook::create_inline(compile, compile_hook);
 	std::println("Hooked LuaVM::compile.");
@@ -183,8 +205,8 @@ void thread() {
 	hooks::deserialize_item = safetyhook::create_inline(deserialize_item, deserialize_item_hook);
 	std::println("Hooked RBX::Network::Replicator::deserializeItem.");
 
-	patch_generate_schema_definition_packet();
-	std::println("Patched RBX::Network::NetworkSchema::generateSchemaDefinitionPacket.");
+	patch_type_for_property();
+	std::println("Patched RBX::Network::NetworkSchema::typeForProperty.");
 
 	std::println("Made with <3 by 7ap & Epix @ https://github.com/rsblox - come join us!");
 }
